@@ -49,11 +49,11 @@ program main
   
   allocate(b(comp), ac(comp), a(comp), Tc(comp), Pc(comp), acentric(comp))
   
-  allocate(K(comp,9), Composition(comp,10), z(comp), kij(comp,comp), lij(comp,comp))
+  allocate(K(comp), Composition(comp,comp), z(comp), kij(comp,comp), lij(comp,comp))
   
   !defining variables maximum size supposing a maximum number of phases equal to 8
   !Degrees of freedom = (F-1)*C + F + 1
-  allocate(dF((8*comp+8+1)*(8*comp+8+1)), step(8*comp+8+1), dfdS(8*comp+8+1), Var(8*comp+8+1), sensitivity(8*comp+8+1), F(8*comp+8+1))
+  allocate(dF((comp+2)*(comp+2)), step(comp+2), dfdS(comp+2), Var(comp+2), sensitivity(comp+2), F(comp+2))
   
   !     Independent Variables     !
   ! (F-1)*C            K          !
@@ -87,10 +87,10 @@ program main
   
   !Initial Settings - Dew point ///////////////////////////////////////////////////////////////////////////////////////////////////
   T = 298.0d0 !Initial Temperature Guess (K)
-  P = 1.d0 !Initial Pressure (bar)
+  P = 0.5d0 !Initial Pressure (bar)
   
   do i = 1,comp
-    K(i,1) = 1.0d0/dexp(dlog(Pc(i)/P) + 5.373d0*(1.0d0 + Acentric(i))*(1.0d0 - Tc(i)/T)) !Whitson's Approach for Vapor-Liquid Equilibria
+    K(i) = 1.0d0/dexp(dlog(Pc(i)/P) + 5.373d0*(1.0d0 + Acentric(i))*(1.0d0 - Tc(i)/T)) !Whitson's Approach for Vapor-Liquid Equilibria
     z(i) = z(i)/aux !Normalizing Global Composition
     Composition(i,1) = z(i) !Reference Phase Composition
   enddo
@@ -108,8 +108,8 @@ program main
       
       call EoS_param(acentric,Tc,ac,a,T,comp) !Updating Attractive Parameter
       call VdW1fMIX (comp,a,b,kij,lij,z,amix(1),bmix(1)) !Mixing Rule
-      call EoS_Volume(P, T, bmix(1), amix(1), Volume(1), 0) !Calculating Vapor Phase Molar Volume
-      call EoS_Volume(P, T, bmix(1), amix(1), Volume(2), 1) !Calculating Liquid Phase Molar Volume
+      call EoS_Volume(P, T, bmix(1), amix(1), Volume(1), phase(1)) !Calculating Vapor Phase Molar Volume
+      call EoS_Volume(P, T, bmix(1), amix(1), Volume(2), phase(2)) !Calculating Liquid Phase Molar Volume
       !Calculating Gibbs Energy Of Vapor And Liquid Phases
       Gibbs_vap = 0.0d0
       Gibbs_liq = 0.0d0
@@ -161,8 +161,8 @@ program main
       call EoS_param(acentric,Tc,ac,a,T,comp) !Updating Attractive Parameter
       call VdW1fMIX (comp,a,b,kij,lij,Composition(:,1),amix(1),bmix(1)) !Mixing Rule - Reference Phase
       call VdW1fMIX (comp,a,b,kij,lij,Composition(:,2),amix(2),bmix(2)) !Mixing Rule - Incipient Phase
-      call EoS_Volume(P, T, bmix(1), amix(1), Volume(1), 0)
-      call EoS_Volume(P, T, bmix(2), amix(2), Volume(2), 1)
+      call EoS_Volume(P, T, bmix(1), amix(1), Volume(1), phase(1))
+      call EoS_Volume(P, T, bmix(2), amix(2), Volume(2), phase(2))
       do i = 1,comp
         call fugacity(comp,T,P,a,b,amix(1),bmix(1),FugCoef_ref,Volume(1),Composition(:,1),kij(i,:),lij(i,:),i)
         call fugacity(comp,T,P,a,b,amix(2),bmix(2),FugCoef_aux,Volume(2),Composition(:,2),kij(i,:),lij(i,:),i)
@@ -173,8 +173,8 @@ program main
       call EoS_param(acentric,Tc,ac,a,T,comp) !Updating Attractive Parameter
       call VdW1fMIX (comp,a,b,kij,lij,Composition(:,1),amix(1),bmix(1)) !Mixing Rule - Reference Phase
       call VdW1fMIX (comp,a,b,kij,lij,Composition(:,2),amix(2),bmix(2)) !Mixing Rule - Incipient Phase
-      call EoS_Volume(P, T, bmix(1), amix(1), Volume(1), 0)
-      call EoS_Volume(P, T, bmix(2), amix(2), Volume(2), 1)
+      call EoS_Volume(P, T, bmix(1), amix(1), Volume(1), phase(1))
+      call EoS_Volume(P, T, bmix(2), amix(2), Volume(2), phase(2))
       do i = 1,comp
         call fugacity(comp,T,P,a,b,amix(1),bmix(1),FugCoef_ref,Volume(1),Composition(:,1),kij(i,:),lij(i,:),i)
         call fugacity(comp,T,P,a,b,amix(2),bmix(2),FugCoef_aux,Volume(2),Composition(:,2),kij(i,:),lij(i,:),i)
@@ -197,8 +197,8 @@ program main
       call EoS_param(acentric,Tc,ac,a,T,comp)
       call VdW1fMIX (comp,a,b,kij,lij,Composition(:,1),amix(1),bmix(1)) !Mixing Rule - Reference Phase
       call VdW1fMIX (comp,a,b,kij,lij,Composition(:,2),amix(2),bmix(2)) !Mixing Rule - Incipient Phase
-      call EoS_Volume(P, T, bmix(1), amix(1), Volume(1), 0)
-      call EoS_Volume(P, T, bmix(2), amix(2), Volume(2), 1)
+      call EoS_Volume(P, T, bmix(1), amix(1), Volume(1), phase(1))
+      call EoS_Volume(P, T, bmix(2), amix(2), Volume(2), phase(2))
       do i = 1,comp
         call fugacity(comp,T,P,a,b,amix(1),bmix(1),FugCoef_ref,Volume(1),Composition(:,1),kij(i,:),lij(i,:),i)
         call fugacity(comp,T,P,a,b,amix(2),bmix(2),FugCoef_aux,Volume(2),Composition(:,2),kij(i,:),lij(i,:),i)
@@ -228,8 +228,6 @@ program main
       dfdS(i) = 0.0d0
   enddo
   dfdS(comp+2) = 1.0d0
-  tol = 1.0d-6
-  diff = 1.0d-6
   maxit = 100 !Maximum Number Of Iteration In Newton's Method
   maxTstep = 5.0d0 !Maximum Temperature Step In Continuation Method
   K_CritPoint = 0.04d0 !K-factor Reference Value Used To Detect Critical Points
@@ -586,7 +584,7 @@ print*, Var(maxK_i)
 
           flag_crit = 1
           flag_error = 0
-      elseif(flag_error .eq. 1 .and. flag_crit .eq. 0 .and. abs(dS) .gt. 1.d-6) then
+      elseif(flag_error .eq. 1 .and. flag_crit .eq. 0 .and. abs(dS) .gt. tol) then
           Var = Var_old
           S = Var(SpecVar)
           dS = dS/4.d0
